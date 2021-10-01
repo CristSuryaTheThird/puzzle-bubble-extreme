@@ -11,10 +11,10 @@ export default class LevelScene extends Phaser.Scene {
   preload(): void {}
 
   create(): void {
-    this.fpsText = new FpsText(this);
+    // this.fpsText = new FpsText(this);
   }
 
   update(): void {
-    this.fpsText.update();
+    // this.fpsText.update();
   }
 }
