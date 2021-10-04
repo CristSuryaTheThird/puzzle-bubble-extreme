@@ -1,1 +1,1 @@
-web: ./node_modules/live-server/index.js
+web: node app.js
