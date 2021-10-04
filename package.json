@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "build": "webpack",
-    "start": "webpack --watch & live-server"
+    "start": "npm run build && live-server --host=0.0.0.0 --port=$PORT --disable-host-check"
   },
   "author": "kevin sutrisno",
   "license": "MIT",
