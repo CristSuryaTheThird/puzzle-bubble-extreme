@@ -1,1 +1,1 @@
-web: ./node_modules/webpack/bin/webpack.js 
+web: ./node_modules/live-server/live-server.js
