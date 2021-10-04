@@ -16,7 +16,9 @@
     "typescript": "^3.7.4",
     "webpack": "^4.41.5",
     "webpack-cli": "^3.3.10"
-    
   },
-  "heroku-run-build-script": true
+  "heroku-run-build-script": true,
+  "dependencies": {
+    "express": "^4.17.1"
+  }
 }
