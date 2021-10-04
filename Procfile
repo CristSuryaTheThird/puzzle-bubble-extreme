@@ -1,1 +1,1 @@
-web: webpack --watch & live-server 
+web: ./node_modules/webpack/bin/webpack.js 
