@@ -1,1 +1,1 @@
-web: ./node_modules/live-server/live-server.js
+web: node_modules/live-server/live-server.js
