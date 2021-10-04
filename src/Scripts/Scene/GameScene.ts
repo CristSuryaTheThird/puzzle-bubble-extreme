@@ -163,18 +163,24 @@ export default class GameScene extends Phaser.Scene {
         this.bubbleSwitchHandler();
       })
 
-      //#region Pointer Input
+      //#region Pointer Input and movement
       this.pointer = this.input.activePointer;
-      this.pointer.y = 1000;
+      this.input.off('pointerdown');
       this.input.on('pointerdown',(pointer:Phaser.Input.Pointer)=>{
         if(!this.gameOver){
           if(pointer.y >=this.height*0.775){
-            this.aimMode = true;
+         
+            if(!this.bubbleDelay){
+              this.aimMode = true;
+              this.adjustAimAngle();
+            }
           }else{
             this.aimMode = false;
           }
         }
-      })
+      });
+     
+      this.input.off('pointerup');
       this.input.on('pointerup',()=>{
         if(!this.gameOver){
           if(!this.bubbleDelay && this.aimMode){
@@ -183,16 +189,25 @@ export default class GameScene extends Phaser.Scene {
           }
           this.aimMode = false;
         }    
-      })
+      });
+      
+      this.input.off('pointermove')
+      this.input.on('pointermove',()=>{
+        if(!this.bubbleDelay && this.aimMode){
+          if(this.pointer.y >= this.height*0.775){
+           this.adjustAimAngle();
+            
+          }else{
+            this.aimMode = false;
+          }
+        
+        }
+      });
       //#endregion
+    
       this.physics.add.overlap(this.gameOverColider,this.bubbleGroup,this.gameOverColiderControl,undefined,this)
       this.physics.add.overlap(this.bubble,this.bubbleGroup,this.bubleOverlapHandler,undefined,this)
       this.arrow = new Arrow(this, this.bubble.x, this.bubble.y);
-      
-      // if(this.ctd === 0){
-      //   this.ctd+=1;
-      //   this.scene.restart();
-      // }
   }
 
   
@@ -204,22 +219,7 @@ export default class GameScene extends Phaser.Scene {
       // 
       if(!this.bubbleDelay && this.aimMode){
         this.arrow.visible = true;
-        if(this.pointer.y >= this.height*0.775){
-          this.pointerAngle = Phaser.Math.Angle.Between(this.bubble.x,this.bubble.y,this.pointer.x,this.pointer.y);
-          this.pointerAngle = Phaser.Math.RadToDeg(this.pointerAngle);
-          this.bubble.setAngle(this.pointerAngle - 90);
-          this.arrow.setAngle(this.pointerAngle-90);
-          this.pointerAngle = Phaser.Math.DegToRad(this.pointerAngle+180);
-          
-          Phaser.Geom.Line.SetToAngle(this.aimLine, this.bubble.x,this.bubble.y,this.pointerAngle, 2000);
-          this.AimAdjust();
-          
-        }else{
-          this.aimMode = false;
-        }
-      
       }else{
-        
         this.arrow.visible = false;
         this.graphics.clear();
       }
@@ -351,6 +351,17 @@ export default class GameScene extends Phaser.Scene {
         this.redrawLine();
       }
     }
+  }
+
+  private adjustAimAngle(){
+    this.pointerAngle = Phaser.Math.Angle.Between(this.bubble.x,this.bubble.y,this.pointer.x,this.pointer.y);
+    this.pointerAngle = Phaser.Math.RadToDeg(this.pointerAngle);
+    this.bubble.setAngle(this.pointerAngle - 90);
+    this.arrow.setAngle(this.pointerAngle-90);
+    this.pointerAngle = Phaser.Math.DegToRad(this.pointerAngle+180);
+    
+    Phaser.Geom.Line.SetToAngle(this.aimLine, this.bubble.x,this.bubble.y,this.pointerAngle, 2000);
+    this.AimAdjust();
   }
 
   private adjustReflectAim(intersectPoint:Phaser.Geom.Point,reflectAngle:number):void{
