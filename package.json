@@ -5,18 +5,17 @@
   "main": "app.js",
   "scripts": {
     "build": "webpack",
-    "start": "npm run build && live-server --host=0.0.0.0 --port=$PORT --disable-host-check"
+    "start": "npm run build && live-server"
   },
   "author": "kevin sutrisno",
   "license": "MIT",
-  "devDependencies": {
+  "dependencies": {
     "live-server": "^1.2.1",
     "phaser": "^3.55.2",
     "ts-loader": "^6.2.1",
     "typescript": "^3.7.4",
     "webpack": "^4.41.5",
     "webpack-cli": "^3.3.10"
-    
   },
   "heroku-run-build-script": true
 }
