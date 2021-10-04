@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "build": "webpack",
-    "start": "webpack --watch & live-server "
+    "start": "npm run build && webpack-dev-server --host=0.0.0.0 --port=$PORT"
   },
   "author": "kevin sutrisno",
   "license": "MIT",
@@ -16,5 +16,7 @@
     "typescript": "^3.7.4",
     "webpack": "^4.41.5",
     "webpack-cli": "^3.3.10"
-  }
+    
+  },
+  "heroku-run-build-script": true
 }
