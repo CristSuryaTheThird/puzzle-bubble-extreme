@@ -164,15 +164,16 @@ export default class GameScene extends Phaser.Scene {
       })
 
       //#region Pointer Input and movement
-      this.pointer = this.input.activePointer;
-      this.input.off('pointerdown');
+      // this.pointer = this.input.activePointer;
+      
+     
       this.input.on('pointerdown',(pointer:Phaser.Input.Pointer)=>{
         if(!this.gameOver){
           if(pointer.y >=this.height*0.775){
          
             if(!this.bubbleDelay){
               this.aimMode = true;
-              this.adjustAimAngle();
+              this.adjustAimAngle(pointer);
             }
           }else{
             this.aimMode = false;
@@ -180,7 +181,7 @@ export default class GameScene extends Phaser.Scene {
         }
       });
      
-      this.input.off('pointerup');
+      
       this.input.on('pointerup',()=>{
         if(!this.gameOver){
           if(!this.bubbleDelay && this.aimMode){
@@ -189,13 +190,14 @@ export default class GameScene extends Phaser.Scene {
           }
           this.aimMode = false;
         }    
+
       });
       
-      this.input.off('pointermove')
-      this.input.on('pointermove',()=>{
+    
+      this.input.on('pointermove',(pointer:Phaser.Input.Pointer)=>{
         if(!this.bubbleDelay && this.aimMode){
-          if(this.pointer.y >= this.height*0.775){
-           this.adjustAimAngle();
+          if(pointer.y >= this.height*0.775){
+           this.adjustAimAngle(pointer);
             
           }else{
             this.aimMode = false;
@@ -353,13 +355,12 @@ export default class GameScene extends Phaser.Scene {
     }
   }
 
-  private adjustAimAngle(){
-    this.pointerAngle = Phaser.Math.Angle.Between(this.bubble.x,this.bubble.y,this.pointer.x,this.pointer.y);
+  private adjustAimAngle(pointer:Phaser.Input.Pointer){
+    this.pointerAngle = Phaser.Math.Angle.Between(this.bubble.x,this.bubble.y, pointer.x, pointer.y);
     this.pointerAngle = Phaser.Math.RadToDeg(this.pointerAngle);
     this.bubble.setAngle(this.pointerAngle - 90);
     this.arrow.setAngle(this.pointerAngle-90);
     this.pointerAngle = Phaser.Math.DegToRad(this.pointerAngle+180);
-    
     Phaser.Geom.Line.SetToAngle(this.aimLine, this.bubble.x,this.bubble.y,this.pointerAngle, 2000);
     this.AimAdjust();
   }
