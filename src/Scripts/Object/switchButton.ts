@@ -3,7 +3,7 @@ import * as Phaser from 'phaser'
 export default class switchButton extends Phaser.GameObjects.Sprite{
     private buttonDowned:boolean = false;
     private label:Phaser.GameObjects.Text;
-    constructor(scene:Phaser.Scene, x:number, y:number){
+    constructor(scene:Phaser.Scene, x:number, y:number, width:number, height:number){
         super(scene,x,y,'button2');
         this.scene.add.existing(this);
         this.setScale(0.7);
@@ -39,6 +39,7 @@ export default class switchButton extends Phaser.GameObjects.Sprite{
             
             
         })
+        scene.add.rectangle(width/2, y,width,height*0.0075,0xff0000 ).setAlpha(0.3);
         this.setDepth(1000);
         this.label.setDepth(1001);
     }

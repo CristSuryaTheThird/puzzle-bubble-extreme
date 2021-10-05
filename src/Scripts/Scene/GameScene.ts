@@ -7,6 +7,7 @@ import Bubble from "../Object/Bubble";
 import CeilingCollider from "../Object/ceilingCollider"
 import NextBubbleBorder from "../Object/nextBubbleBorder"
 import SwitchButton from "../Object/switchButton"
+import BgmButton from "../Object/bgmButton"
 import LevelText from "../Object/levelText"
 import levelIndicator from "../Object/levelIndicator"
 import GameOverColider from "../Object/gameOverColider"
@@ -28,10 +29,12 @@ export default class GameScene extends Phaser.Scene {
   //#region input
   private pointer:Phaser.Input.Pointer;
   private spacebar:Phaser.Input.Keyboard.Key;
-  private switchButton:SwitchButton;
+
   //#endregion
 
   //#region Object
+  private switchButton:SwitchButton;
+  private bgmButton:BgmButton;
   private bubbleGroup:Bubbles;
   private bubble:Bubble;
   private nextBubble:Bubble;
@@ -66,6 +69,7 @@ export default class GameScene extends Phaser.Scene {
 
 
   //#region number and array
+  private bubbleSpawnY:number;
   private width:number = 0;
   private height:number = 0;
   private level:number;
@@ -121,8 +125,7 @@ export default class GameScene extends Phaser.Scene {
   create(): void 
   {
       let myCoord:{tilex:number,tiley:number} = this.getBubbleCoordinate(0,9);
-      console.log(myCoord.tiley);
-      console.log("test");
+      
       this.spacebar = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
       this.sfxBubble = this.sound.add('sfx');
       this.sfxBubbleConfig = {
@@ -145,14 +148,18 @@ export default class GameScene extends Phaser.Scene {
         delay: 0,
       }
       this.bgm.play(this.bgmConfig)
-      var r1 = this.add.rectangle(this.width/2, this.height*0.0375, this.width, this.height*0.075, 0x6666ff);
-      var r2 = this.add.rectangle(this.width/2, this.height*0.875,this.width,this.height*0.25,0x7d7b7a );
-      var r3 = this.add.rectangle(this.width/2, myCoord.tiley,this.width,this.height*0.0075,0xff0000 ).setAlpha(0.3);
+      var header = this.add.rectangle(this.width/2, this.height*0.0375, this.width, this.height*0.075, 0x6666ff);
+      let floorHeight = (this.height - myCoord.tiley) - this.height*0.0417
+      let floorYpos = this.height - (floorHeight/2)
+      this.bubbleSpawnY = this.height - floorHeight
+      var floor = this.add.rectangle(this.width/2,  floorYpos,this.width,floorHeight,0x7d7b7a );
+      // var floor = this.add.rectangle(this.width/2, this.height*0.875,this.width,this.height*0.25,0x7d7b7a );
+      // var redLine = this.add.rectangle(this.width/2, height*0.71,this.width,this.height*0.0075,0xff0000 ).setAlpha(0.3);
       this.gameOverColider = new GameOverColider(this,this.width/2,myCoord.tiley,this.width,this.height*0.0075)
 
       this.ceilingColider = new CeilingCollider(this,this.width/2,this.height*0.0375,this.width,this.height*0.075);
       
-      this.bubble = new Bubble(this,this.width/2,this.height*0.75, Phaser.Math.Between(0,6),this.width);
+      this.bubble = new Bubble(this,this.width/2,this.bubbleSpawnY, Phaser.Math.Between(0,6),this.width);
       this.bubbleGroup = new Bubbles(this.physics.world, this);
 
       this.nextColor = Phaser.Math.Between(0,6);
@@ -175,12 +182,13 @@ export default class GameScene extends Phaser.Scene {
       this.createBubble();
 
        
-      this.switchButton = new SwitchButton(this,this.width*0.89,this.height*0.71);
+      this.switchButton = new SwitchButton(this,this.width*0.89,myCoord.tiley,this.width,this.height);
       this.switchButton.changeColor(this.nextColor);
       this.switchButton.on('switching',()=>{
         this.bubbleSwitchHandler();
       })
 
+      this.bgmButton = new BgmButton(this,30,myCoord.tiley)
       //#region Pointer Input and movement
       // this.pointer = this.input.activePointer;
       
@@ -598,7 +606,7 @@ export default class GameScene extends Phaser.Scene {
     this.bubble.destroy(true);
     if(!this.gameOver){
       this.popHandler(tilePos.x, tilePos.y)
-      this.bubble = new Bubble(this,this.width/2,this.height*0.75, this.nextColor,this.width);
+      this.bubble = new Bubble(this,this.width/2,this.bubbleSpawnY, this.nextColor,this.width);
       this.nextColor = Phaser.Math.Between(0,6);
       this.nextBubble.changeColor(this.nextColor);
       this.switchButton.changeColor(this.nextColor);
