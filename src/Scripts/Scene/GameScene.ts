@@ -534,12 +534,9 @@ export default class GameScene extends Phaser.Scene {
       console.log(bubTile);
       if(this.tempBubbleHit.x > bubTile.xCoord){
         if(this.bubbleStacks.length > bubTile.yPos){    
-          if(this.bubbleStacks[bubTile.ypos].length > (bubTile.xPos + 1)){
-            if(this.bubbleStacks[bubTile.yPos][bubTile.xPos + 1] === undefined){
-              bubTile.xPos += 1;
-            }
+          if(this.bubbleStacks[bubTile.yPos][bubTile.xPos + 1] === undefined){
+            bubTile.xPos += 1;
           }
-          
         }else{
           bubTile.xPos += 1;
         }
