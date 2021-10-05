@@ -27,11 +27,7 @@ export default class GameScene extends Phaser.Scene {
   private bgmConfig;
   //#endregion
 
-  //#region input
-  private pointer:Phaser.Input.Pointer;
-  private spacebar:Phaser.Input.Keyboard.Key;
-
-  //#endregion
+  
 
   //#region Object
   private switchButton:SwitchButton;
@@ -246,9 +242,7 @@ export default class GameScene extends Phaser.Scene {
   update(): void 
   { 
     if(!this.gameOver){
-      // 
-      // this.debugBubble();
-      // 
+      
       if(!this.bubbleDelay && this.aimMode){
         this.arrow.visible = true;
       }else{
@@ -311,13 +305,7 @@ export default class GameScene extends Phaser.Scene {
   }
   //#endregion
 
-  //#region debugging
-  // private debugBubble(){
-    // if(Phaser.Input.Keyboard.JustDown(this.spacebar)){
-    //   this.progressLevel();
-    // }
-  // }
-  //#endregion
+
 
   //#region Geom Aim Adjust
   private AimAdjust():void{
@@ -508,72 +496,12 @@ export default class GameScene extends Phaser.Scene {
       code:this.tempBubble.getData('code'),
       processed:false
     }
-
-
+    
     if(this.tempBubbleHit !== undefined){
       tilePos = this.adjustBubbleCoordinate(bubTile);
       coord = this.getBubbleCoordinate(tilePos.x,tilePos.y);
-      // let bubNeighbor = this.getNeighbor(bubTile);
-      // let trueNeighbor:boolean = false;
-      // for(let i = 0; i< bubNeighbor.length; i++){
-      //   if(bubNeighbor[i].xCoord === this.tempBubbleHit.x && bubNeighbor[i].yCoord === this.tempBubbleHit.y){
-      //     trueNeighbor = true;
-      //     break;
-      //   }
-      // }
-      // if(!trueNeighbor){
-      //   if(this.tempBubbleHit.x > bubTile.xCoord){
-      //     if(this.bubbleStacks.length > bubTile.yPos){    
-      //       if(this.bubbleStacks[bubTile.yPos][bubTile.xPos + 1] === undefined){
-      //         tilePos.x += 1;
-      //       }
-      //     }else{
-      //       tilePos.x += 1;
-      //     }
-      //   }else{
-      //     if(this.bubbleStacks.length > bubTile.yPos){
-      //       if(this.bubbleStacks[bubTile.yPos][bubTile.xPos - 1] === undefined){
-      //         tilePos.x -= 1;
-      //       }
-      //     }else{
-      //       tilePos.x -= 1;
-      //     }
-      //   }
-      //   coord = this.getBubbleCoordinate(tilePos.x,tilePos.y);
-      // }
     }
-
-    // let col:number = this.getColNum(rowNum);
-    // if(rowNum > currMaxRow){
-    //   let tempArr = [];
-    //   for(let i = 0; i< col;i++){
-    //     if(i !== tilePos.x){
-    //       tempArr.push(undefined);
-    //     }else{
-    //       tempArr.push({
-    //         xCoord:coord.tilex,
-    //         yCoord:coord.tiley,
-    //         xPos:tilePos.x,
-    //         yPos:tilePos.y,
-    //         code:this.tempBubble.getData('code'),
-    //         processed:false
-    //       })
-    //     }
-    //   }
-    //   this.bubbleStacks.push(tempArr);
-     
-    // }else{
-    //   this.bubbleStacks[tilePos.y][tilePos.x] = {
-    //     xCoord:coord.tilex,
-    //     yCoord:coord.tiley,
-    //     xPos:tilePos.x,
-    //     yPos:tilePos.y,
-    //     code:this.tempBubble.getData('code'),
-    //     processed:false
-    //   }
-    // }
     this.adjustBubbleArray(tilePos);
-
 
     this.bubbleGroup.add(new Bubble(this,coord.tilex,coord.tiley,this.tempBubble.getData('code'),this.width));
     this.bubble.destroy(true);
@@ -592,7 +520,6 @@ export default class GameScene extends Phaser.Scene {
   
       this.boolOnCollision = false;
     }
-   
   }
 
   private adjustBubbleCoordinate(bubTile):{x:number, y:number}{
@@ -779,9 +706,7 @@ export default class GameScene extends Phaser.Scene {
       this.progressLevel();
     }
   }
-
     private floatHandler(){
-     
     let floatingCluster = this.findFloatingCluster();
     if(floatingCluster.length > 0){
       for(let fRow = 0; fRow< floatingCluster.length; fRow++){

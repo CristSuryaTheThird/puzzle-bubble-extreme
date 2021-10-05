@@ -9,7 +9,7 @@ export default class Bubble extends Phaser.Physics.Arcade.Sprite{
         scene.physics.add.existing(this);
         this.setInteractive();
         this.setData('code',code);
-        this.setScale((width/8)/375).setOffset(71,71).body.setCircle(185)
+        this.setScale((width/8)/375).setOffset(71,71).body.setCircle(187)
         this.setCollideWorldBounds(true);
         this.setBounce(1,1);
         if(code === 0){
