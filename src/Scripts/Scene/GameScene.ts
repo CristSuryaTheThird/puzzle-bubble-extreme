@@ -126,7 +126,7 @@ export default class GameScene extends Phaser.Scene {
   create(): void 
   {
       let myCoord:{tilex:number,tiley:number} = this.getBubbleCoordinate(0,9);
-      this.spacebar = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+      // this.spacebar = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
       this.sfxBubble = this.sound.add('sfx');
       this.sfxBubbleConfig = {
         mute: false,
@@ -247,7 +247,7 @@ export default class GameScene extends Phaser.Scene {
   { 
     if(!this.gameOver){
       // 
-      this.debugBubble();
+      // this.debugBubble();
       // 
       if(!this.bubbleDelay && this.aimMode){
         this.arrow.visible = true;
@@ -312,11 +312,11 @@ export default class GameScene extends Phaser.Scene {
   //#endregion
 
   //#region debugging
-  private debugBubble(){
-    if(Phaser.Input.Keyboard.JustDown(this.spacebar)){
-      this.progressLevel();
-    }
-  }
+  // private debugBubble(){
+    // if(Phaser.Input.Keyboard.JustDown(this.spacebar)){
+    //   this.progressLevel();
+    // }
+  // }
   //#endregion
 
   //#region Geom Aim Adjust
