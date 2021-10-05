@@ -541,9 +541,7 @@ export default class GameScene extends Phaser.Scene {
           }
           
         }else{
-          if(this.bubbleStacks[bubTile.ypos].length > (bubTile.xPos + 1)){
-            bubTile.xPos += 1;
-          }
+          bubTile.xPos += 1;
         }
       }else{
         if(this.bubbleStacks.length > bubTile.yPos){
