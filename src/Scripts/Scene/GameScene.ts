@@ -120,6 +120,9 @@ export default class GameScene extends Phaser.Scene {
 
   create(): void 
   {
+      let myCoord:{tilex:number,tiley:number} = this.getBubbleCoordinate(0,9);
+      console.log(myCoord.tiley);
+      console.log("test");
       this.spacebar = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
       this.sfxBubble = this.sound.add('sfx');
       this.sfxBubbleConfig = {
@@ -144,8 +147,8 @@ export default class GameScene extends Phaser.Scene {
       this.bgm.play(this.bgmConfig)
       var r1 = this.add.rectangle(this.width/2, this.height*0.0375, this.width, this.height*0.075, 0x6666ff);
       var r2 = this.add.rectangle(this.width/2, this.height*0.875,this.width,this.height*0.25,0x7d7b7a );
-      var r3 = this.add.rectangle(this.width/2, this.height*0.71,this.width,this.height*0.0075,0xff0000 ).setAlpha(0.3);
-      this.gameOverColider = new GameOverColider(this,this.width/2, this.height*0.71,this.width,this.height*0.0075)
+      var r3 = this.add.rectangle(this.width/2, myCoord.tiley,this.width,this.height*0.0075,0xff0000 ).setAlpha(0.3);
+      this.gameOverColider = new GameOverColider(this,this.width/2,myCoord.tiley,this.width,this.height*0.0075)
 
       this.ceilingColider = new CeilingCollider(this,this.width/2,this.height*0.0375,this.width,this.height*0.075);
       
@@ -302,27 +305,6 @@ export default class GameScene extends Phaser.Scene {
   //#region debugging
   private debugBubble(){
     if(Phaser.Input.Keyboard.JustDown(this.spacebar)){
-      // let code = this.bubble.getData('code');
-      // code += 1;
-      // if(code > 6){
-      //   code = 0;
-      // }
-      // this.bubble.setData('code',code);
-      // if(code === 0){
-      //   this.bubble.setTint(0xff0000);
-      // }else  if(code === 1){
-      //   this.bubble.setTint(0x34a4eb);
-      // }else  if(code === 2){
-      //   this.bubble.setTint(0x34eb5f);
-      // }else  if(code === 3){
-      //   this.bubble.setTint(0xf5e907);
-      // }else  if(code === 4){
-      //   this.bubble.setTint(0x00000);
-      // }else  if(code === 5){
-      //   this.bubble.setTint(0x3f07f5);
-      // }else  if(code === 6){
-      //   this.bubble.setTint(0xf507e9);
-      // }
       this.progressLevel();
     }
   }
@@ -550,26 +532,29 @@ export default class GameScene extends Phaser.Scene {
     if(this.tempBubbleHit !== undefined){
       let bubNeighbor = this.getNeighbor(bubTile);
       let trueNeighbor:boolean = false;
-      // let trueNeighborPosX:number;
-      // let trueNeighborPosY:number;
       for(let i = 0; i< bubNeighbor.length; i++){
         if(bubNeighbor[i].xCoord === this.tempBubbleHit.x && bubNeighbor[i].yCoord === this.tempBubbleHit.y){
           trueNeighbor = true;
-          // trueNeighborPosX = bubNeighbor[i].xPos;
-          // trueNeighborPosY = bubNeighbor[i].yPos
           break;
         }
       }
       if(!trueNeighbor){
         if(this.tempBubbleHit.x > bubTile.xCoord){
-          // if(this.bubbleStacks[tilePos.y][tilePos.x + 1] === undefined){
+          if(this.bubbleStacks.length > bubTile.yPos){    
+            if(this.bubbleStacks[bubTile.yPos][bubTile.xPos + 1] === undefined){
+              tilePos.x += 1;
+            }
+          }else{
             tilePos.x += 1;
-          // }
-          
+          }
         }else{
-          // if(this.bubbleStacks[tilePos.y][tilePos.x - 1] === undefined){
+          if(this.bubbleStacks.length > bubTile.yPos){
+            if(this.bubbleStacks[bubTile.yPos][bubTile.xPos - 1] === undefined){
+              tilePos.x -= 1;
+            }
+          }else{
             tilePos.x -= 1;
-          // }
+          }
         }
         coord  = this.getBubbleCoordinate(tilePos.x,tilePos.y);
       }
@@ -608,16 +593,6 @@ export default class GameScene extends Phaser.Scene {
       }
     }
 
-    //#endregion
-    //#region check for gameover
-    // if(this.bubbleStacks.length >= 10){
-    //   let colNum = this.getColNum(this.bubbleStacks.length - 1);
-    //   for(let i = 0; i<colNum; i++){
-    //     if(this.bubbleStacks[this.bubbleStacks.length-1][i] !== undefined){
-    //       this.gameOver = true;
-    //     }
-    //   }
-    // }
     //#endregion
     this.bubbleGroup.add(new Bubble(this,coord.tilex,coord.tiley,this.tempBubble.getData('code'),this.width));
     this.bubble.destroy(true);
@@ -724,14 +699,6 @@ export default class GameScene extends Phaser.Scene {
       }
     }else{
       this.bubbleDelay = false;
-      // if(this.bubbleStacks.length >= 10){
-      //   let colNum = this.getColNum(this.bubbleStacks.length - 1);
-      //   for(let i = 0; i<colNum; i++){
-      //     if(this.bubbleStacks[this.bubbleStacks.length-1][i] !== undefined){
-      //       this.gameOver = true;
-      //     }
-      //   }
-      // }
       this.progressLevel();
     }
   }
@@ -914,12 +881,6 @@ export default class GameScene extends Phaser.Scene {
     //#region moving bubble stack to temp bubblestack
     
     if(this.bubbleStacks.length >= 9){
-      // for(let i = 0; i<this.bubbleStacks[this.bubbleStacks.length-1].length; i++){
-      //   if(this.bubbleStacks[8][i] !== undefined){
-      //     fullStack = true;
-      //   }
-      // }
-     
       maxRowLength = 9;
     }else{
       maxRowLength = this.bubbleStacks.length;

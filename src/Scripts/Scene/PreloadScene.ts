@@ -20,6 +20,8 @@ export default class PreloadScene extends Phaser.Scene {
     this.load.image('panel3','gameOver/buttonSquare_blue_pressed.png')
     this.load.image('button2','gameOver/buttonLong_blue.png');
     this.load.image('button2Pressed','gameOver/buttonLong_blue_pressed.png');
+    this.load.image('musicOn','musicOn.png');
+    this.load.image('musicOff','musicOff.png');
     
     // 
   }
