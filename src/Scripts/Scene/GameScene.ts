@@ -466,7 +466,6 @@ export default class GameScene extends Phaser.Scene {
   
         this.bubbleStacks.push(tempArr);
     }
- 
   }
   //#endregion
 
@@ -535,19 +534,30 @@ export default class GameScene extends Phaser.Scene {
       console.log(bubTile);
       if(this.tempBubbleHit.x > bubTile.xCoord){
         if(this.bubbleStacks.length > bubTile.yPos){    
-          if(this.bubbleStacks[bubTile.yPos][bubTile.xPos + 1] === undefined){
+          if(this.bubbleStacks[bubTile.ypos].length > (bubTile.xPos + 1)){
+            if(this.bubbleStacks[bubTile.yPos][bubTile.xPos + 1] === undefined){
+              bubTile.xPos += 1;
+            }
+          }
+          
+        }else{
+          if(this.bubbleStacks[bubTile.ypos].length > (bubTile.xPos + 1)){
             bubTile.xPos += 1;
           }
-        }else{
-          bubTile.xPos += 1;
         }
       }else{
         if(this.bubbleStacks.length > bubTile.yPos){
-          if(this.bubbleStacks[bubTile.yPos][bubTile.xPos - 1] === undefined){
+          if(bubTile.xPos - 1 >= 0){
+            if(this.bubbleStacks[bubTile.yPos][bubTile.xPos - 1] === undefined){
+              bubTile.xPos -= 1;
+            }
+          }
+         
+        }else{
+          if(bubTile.xPos - 1 >= 0){
             bubTile.xPos -= 1;
           }
-        }else{
-          bubTile.xPos -= 1;
+        
         }
       }
       console.log(bubTile);
