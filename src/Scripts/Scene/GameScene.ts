@@ -11,6 +11,7 @@ import BgmButton from "../Object/bgmButton"
 import LevelText from "../Object/levelText"
 import levelIndicator from "../Object/levelIndicator"
 import GameOverColider from "../Object/gameOverColider"
+import { ConstructorDeclaration } from "typescript";
 
 export default class GameScene extends Phaser.Scene {
   private ctd = 0;
@@ -111,7 +112,7 @@ export default class GameScene extends Phaser.Scene {
     this.easyCountdown = 10;
     this.mediumCountdown = 9;
     this.hardCountdown = 8;
-    this.veryHardCountdown= 6;
+    this.veryHardCountdown= 7;
     this.tileCountdown = this.easyCountdown;
     this.neighbouroffsets = [ 
       [[1, 0], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1]], 
@@ -125,7 +126,6 @@ export default class GameScene extends Phaser.Scene {
   create(): void 
   {
       let myCoord:{tilex:number,tiley:number} = this.getBubbleCoordinate(0,9);
-      
       this.spacebar = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
       this.sfxBubble = this.sound.add('sfx');
       this.sfxBubbleConfig = {
@@ -153,18 +153,16 @@ export default class GameScene extends Phaser.Scene {
       let floorYpos = this.height - (floorHeight/2)
       this.bubbleSpawnY = this.height - floorHeight
       var floor = this.add.rectangle(this.width/2,  floorYpos,this.width,floorHeight,0x7d7b7a );
-      // var floor = this.add.rectangle(this.width/2, this.height*0.875,this.width,this.height*0.25,0x7d7b7a );
-      // var redLine = this.add.rectangle(this.width/2, height*0.71,this.width,this.height*0.0075,0xff0000 ).setAlpha(0.3);
-      this.gameOverColider = new GameOverColider(this,this.width/2,myCoord.tiley,this.width,this.height*0.0075)
 
+      this.gameOverColider = new GameOverColider(this,this.width/2,myCoord.tiley,this.width,this.height*0.0075)
       this.ceilingColider = new CeilingCollider(this,this.width/2,this.height*0.0375,this.width,this.height*0.075);
       
       this.bubble = new Bubble(this,this.width/2,this.bubbleSpawnY, Phaser.Math.Between(0,6),this.width);
       this.bubbleGroup = new Bubbles(this.physics.world, this);
 
       this.nextColor = Phaser.Math.Between(0,6);
-      this.nextBubbleBorder = new NextBubbleBorder(this,this.width*0.89,this.height*0.83);
-      this.nextBubble = new Bubble(this,this.width*0.89,this.height*0.83, this.nextColor,this.width);
+      this.nextBubbleBorder = new NextBubbleBorder(this,this.width*0.89,myCoord.tiley + (this.height*0.125));
+      this.nextBubble = new Bubble(this,this.width*0.89,myCoord.tiley + (this.height*0.125), this.nextColor,this.width);
       
       this.fpsText = new FpsText(this.height,this);
       this.scoreText = new ScoreText(this.width*0.021,this.height*0.021,this);
@@ -181,7 +179,6 @@ export default class GameScene extends Phaser.Scene {
       this.randomizedColor();
       this.createBubble();
 
-       
       this.switchButton = new SwitchButton(this,this.width*0.89,myCoord.tiley,this.width,this.height);
       this.switchButton.changeColor(this.nextColor);
       this.switchButton.on('switching',()=>{
@@ -189,9 +186,13 @@ export default class GameScene extends Phaser.Scene {
       })
 
       this.bgmButton = new BgmButton(this,30,myCoord.tiley)
+      this.bgmButton.on('musicTurnOn',()=>{
+        this.bgm.play(this.bgmConfig);
+      })
+      this.bgmButton.on('musicTurnOff',()=>{
+        this.bgm.stop();
+      })
       //#region Pointer Input and movement
-      // this.pointer = this.input.activePointer;
-      
      
       this.input.on('pointerdown',(pointer:Phaser.Input.Pointer)=>{
         if(!this.gameOver){
@@ -233,7 +234,10 @@ export default class GameScene extends Phaser.Scene {
       });
       //#endregion
     
-      this.physics.add.overlap(this.gameOverColider,this.bubbleGroup,this.gameOverColiderControl,undefined,this)
+      this.physics.add.overlap(this.gameOverColider,this.bubbleGroup,()=>{
+        this.gameOver = true;
+        this.scene.pause();
+      },undefined,this)
       this.physics.add.overlap(this.bubble,this.bubbleGroup,this.bubleOverlapHandler,undefined,this)
       this.arrow = new Arrow(this, this.bubble.x, this.bubble.y);
   }
@@ -266,9 +270,6 @@ export default class GameScene extends Phaser.Scene {
   }
 
   //#region game over
-  private gameOverColiderControl(){
-    this.gameOver = true;
-  }
   private endGame(){
     if(!this.gameOverTriggered){
       // this.overlay.setAlpha(0.6)
@@ -481,32 +482,7 @@ export default class GameScene extends Phaser.Scene {
   }
   //#endregion
 
-  //#region Snap Bubble
-  private getBubbleCoordinate(column, row):{tilex:number, tiley:number}{
-    const tilewidth = this.cameras.main.width/8;
-    const tileheight = this.cameras.main.width/8-(this.width*0.014);
-    let tilex:number = column * tilewidth;
-
-    if(!this.inverted){
-      if(row%2 !== 0){
-        tilex += tilewidth/2;
-      }
-    }else{
-      if(row%2 === 0){
-        tilex += tilewidth/2;
-      }
-    }
-    
-    
-    
-    let tiley: number = row * tileheight;
-    tilex+= tilewidth/2;
-    tiley+= tileheight/2 + (this.height*0.081);
-    
-    return {tilex: tilex, tiley:tiley}
-
-  }
-
+  //#region Snap Bubble, adjust array, and adjust coordinate
   private bubleOverlapHandler(b:Phaser.GameObjects.GameObject, g:Phaser.GameObjects.GameObject):void{
     if(this.boolOnCollision === false){
       const bubble = b as Bubble;
@@ -524,9 +500,6 @@ export default class GameScene extends Phaser.Scene {
   private handleBubbleStack():void{
     let tilePos:{x:number,y:number} = this.snapBubble(this.tempBubble);
     let coord:{tilex:number,tiley:number} = this.getBubbleCoordinate(tilePos.x,tilePos.y);
-    const rowNum = tilePos.y;
-    const currMaxRow = this.bubbleStacks.length - 1;
-
     let bubTile = {
       xCoord:coord.tilex,
       yCoord:coord.tiley,
@@ -536,40 +509,129 @@ export default class GameScene extends Phaser.Scene {
       processed:false
     }
 
-    //#region Adjust stack coordinate
+
     if(this.tempBubbleHit !== undefined){
-      let bubNeighbor = this.getNeighbor(bubTile);
-      let trueNeighbor:boolean = false;
-      for(let i = 0; i< bubNeighbor.length; i++){
-        if(bubNeighbor[i].xCoord === this.tempBubbleHit.x && bubNeighbor[i].yCoord === this.tempBubbleHit.y){
-          trueNeighbor = true;
-          break;
-        }
-      }
-      if(!trueNeighbor){
-        if(this.tempBubbleHit.x > bubTile.xCoord){
-          if(this.bubbleStacks.length > bubTile.yPos){    
-            if(this.bubbleStacks[bubTile.yPos][bubTile.xPos + 1] === undefined){
-              tilePos.x += 1;
-            }
-          }else{
-            tilePos.x += 1;
-          }
-        }else{
-          if(this.bubbleStacks.length > bubTile.yPos){
-            if(this.bubbleStacks[bubTile.yPos][bubTile.xPos - 1] === undefined){
-              tilePos.x -= 1;
-            }
-          }else{
-            tilePos.x -= 1;
-          }
-        }
-        coord  = this.getBubbleCoordinate(tilePos.x,tilePos.y);
+      tilePos = this.adjustBubbleCoordinate(bubTile);
+      coord = this.getBubbleCoordinate(tilePos.x,tilePos.y);
+      // let bubNeighbor = this.getNeighbor(bubTile);
+      // let trueNeighbor:boolean = false;
+      // for(let i = 0; i< bubNeighbor.length; i++){
+      //   if(bubNeighbor[i].xCoord === this.tempBubbleHit.x && bubNeighbor[i].yCoord === this.tempBubbleHit.y){
+      //     trueNeighbor = true;
+      //     break;
+      //   }
+      // }
+      // if(!trueNeighbor){
+      //   if(this.tempBubbleHit.x > bubTile.xCoord){
+      //     if(this.bubbleStacks.length > bubTile.yPos){    
+      //       if(this.bubbleStacks[bubTile.yPos][bubTile.xPos + 1] === undefined){
+      //         tilePos.x += 1;
+      //       }
+      //     }else{
+      //       tilePos.x += 1;
+      //     }
+      //   }else{
+      //     if(this.bubbleStacks.length > bubTile.yPos){
+      //       if(this.bubbleStacks[bubTile.yPos][bubTile.xPos - 1] === undefined){
+      //         tilePos.x -= 1;
+      //       }
+      //     }else{
+      //       tilePos.x -= 1;
+      //     }
+      //   }
+      //   coord = this.getBubbleCoordinate(tilePos.x,tilePos.y);
+      // }
+    }
+
+    // let col:number = this.getColNum(rowNum);
+    // if(rowNum > currMaxRow){
+    //   let tempArr = [];
+    //   for(let i = 0; i< col;i++){
+    //     if(i !== tilePos.x){
+    //       tempArr.push(undefined);
+    //     }else{
+    //       tempArr.push({
+    //         xCoord:coord.tilex,
+    //         yCoord:coord.tiley,
+    //         xPos:tilePos.x,
+    //         yPos:tilePos.y,
+    //         code:this.tempBubble.getData('code'),
+    //         processed:false
+    //       })
+    //     }
+    //   }
+    //   this.bubbleStacks.push(tempArr);
+     
+    // }else{
+    //   this.bubbleStacks[tilePos.y][tilePos.x] = {
+    //     xCoord:coord.tilex,
+    //     yCoord:coord.tiley,
+    //     xPos:tilePos.x,
+    //     yPos:tilePos.y,
+    //     code:this.tempBubble.getData('code'),
+    //     processed:false
+    //   }
+    // }
+    this.adjustBubbleArray(tilePos);
+
+
+    this.bubbleGroup.add(new Bubble(this,coord.tilex,coord.tiley,this.tempBubble.getData('code'),this.width));
+    this.bubble.destroy(true);
+  
+    if(!this.gameOver){
+      this.popHandler(tilePos.x, tilePos.y)
+      this.bubble = new Bubble(this,this.width/2,this.bubbleSpawnY, this.nextColor,this.width);
+      this.nextColor = Phaser.Math.Between(0,6);
+      this.nextBubble.changeColor(this.nextColor);
+      this.switchButton.changeColor(this.nextColor);
+      this.physics.add.overlap(this.gameOverColider,this.bubbleGroup,()=>{
+        this.gameOver = true;
+        this.scene.pause();
+      },undefined,this)
+      this.physics.add.overlap(this.bubble,this.bubbleGroup,this.bubleOverlapHandler,undefined,this)
+  
+      this.boolOnCollision = false;
+    }
+   
+  }
+
+  private adjustBubbleCoordinate(bubTile):{x:number, y:number}{
+    let bubNeighbor = this.getNeighbor(bubTile);
+    let trueNeighbor:boolean = false;
+    for(let i = 0; i< bubNeighbor.length; i++){
+      if(bubNeighbor[i].xCoord === this.tempBubbleHit.x && bubNeighbor[i].yCoord === this.tempBubbleHit.y){
+        trueNeighbor = true;
+        break;
       }
     }
-    //#endregion
+    if(!trueNeighbor){
+      console.log(bubTile);
+      if(this.tempBubbleHit.x > bubTile.xCoord){
+        if(this.bubbleStacks.length > bubTile.yPos){    
+          if(this.bubbleStacks[bubTile.yPos][bubTile.xPos + 1] === undefined){
+            bubTile.xPos += 1;
+          }
+        }else{
+          bubTile.xPos += 1;
+        }
+      }else{
+        if(this.bubbleStacks.length > bubTile.yPos){
+          if(this.bubbleStacks[bubTile.yPos][bubTile.xPos - 1] === undefined){
+            bubTile.xPos -= 1;
+          }
+        }else{
+          bubTile.xPos -= 1;
+        }
+      }
+      console.log(bubTile);
+    }
+    return {x:bubTile.xPos,y:bubTile.yPos}
+  }
 
-    //#region adjust bubble array
+  private adjustBubbleArray(tilePos){
+    const rowNum = tilePos.y;
+    const currMaxRow = this.bubbleStacks.length - 1;
+    let coord = this.getBubbleCoordinate(tilePos.x,tilePos.y);
     let col:number = this.getColNum(rowNum);
     if(rowNum > currMaxRow){
       let tempArr = [];
@@ -590,7 +652,6 @@ export default class GameScene extends Phaser.Scene {
       this.bubbleStacks.push(tempArr);
      
     }else{
-     
       this.bubbleStacks[tilePos.y][tilePos.x] = {
         xCoord:coord.tilex,
         yCoord:coord.tiley,
@@ -600,22 +661,27 @@ export default class GameScene extends Phaser.Scene {
         processed:false
       }
     }
+  }
 
-    //#endregion
-    this.bubbleGroup.add(new Bubble(this,coord.tilex,coord.tiley,this.tempBubble.getData('code'),this.width));
-    this.bubble.destroy(true);
-    if(!this.gameOver){
-      this.popHandler(tilePos.x, tilePos.y)
-      this.bubble = new Bubble(this,this.width/2,this.bubbleSpawnY, this.nextColor,this.width);
-      this.nextColor = Phaser.Math.Between(0,6);
-      this.nextBubble.changeColor(this.nextColor);
-      this.switchButton.changeColor(this.nextColor);
-      this.physics.add.overlap(this.gameOverColider,this.bubbleGroup,this.gameOverColiderControl,undefined,this)
-      this.physics.add.overlap(this.bubble,this.bubbleGroup,this.bubleOverlapHandler,undefined,this)
-  
-      this.boolOnCollision = false;
+  private getBubbleCoordinate(column, row):{tilex:number, tiley:number}{
+    const tilewidth = this.cameras.main.width/8;
+    const tileheight = this.cameras.main.width/8-(this.width*0.014);
+    let tilex:number = column * tilewidth;
+
+    if(!this.inverted){
+      if(row%2 !== 0){
+        tilex += tilewidth/2;
+      }
+    }else{
+      if(row%2 === 0){
+        tilex += tilewidth/2;
+      }
     }
-   
+    let tiley: number = row * tileheight;
+    tilex+= tilewidth/2;
+    tiley+= tileheight/2 + (this.height*0.081);
+    
+    return {tilex:tilex, tiley:tiley}
   }
 
   private snapBubble(bubble:Bubble):{x:number, y:number}{
@@ -684,15 +750,18 @@ export default class GameScene extends Phaser.Scene {
             
             this.tweens.add({
               targets: child,
-              completeDelay:idx*50,
+              completeDelay:(idx*50)+1,
               onComplete:()=>{
-                let popSound = this.sound.add('sfx');
-                popSound.play(this.sfxBubbleConfig);
-                child.anims.play('pop');
-                this.score += 10;
-                if(idx === cluster.length - 1){
-                  this.floatHandler();
+                if(!this.gameOver){
+                  let popSound = this.sound.add('sfx');
+                  popSound.play(this.sfxBubbleConfig);
+                  child.anims.play('pop');
+                  this.score += 10;
+                  if(idx === cluster.length - 1){
+                    this.floatHandler();
+                  }
                 }
+                
                 child.on('animationcomplete',()=>{
                   child.destroy();
                   if(idx === cluster.length-1){
@@ -867,7 +936,6 @@ export default class GameScene extends Phaser.Scene {
     }
     //#region making temp bubblestack
     let tempColNum = this.getColNum(0);
-    let fullStack:boolean = false;
     let maxRowLength:number = 0;
     this.tempBubbleStacks = [];
     let newColor = this.getNewColor(tempColNum);
@@ -934,25 +1002,21 @@ export default class GameScene extends Phaser.Scene {
     }
     this.ceilingColider = new CeilingCollider(this,this.width/2,this.height*0.0375,this.width,this.height*0.075);
     this.bubbleGroup.add(this.ceilingColider);
-    if(fullStack){
-      // this.gameOver = true;
-    }else{
-      this.levelCtd -= 1;
-      if(this.levelCtd <= 0 && this.level < 4){
-        this.levelCtd = 3;
-        this.level += 1;
-      }
-      if(this.level == 1){
-        this.tileCountdown = this.easyCountdown;
-      }else if(this.level == 2){
-        this.tileCountdown = this.mediumCountdown;
-      }else if(this.level == 3){
-        this.tileCountdown = this.hardCountdown;
-      }else if(this.level == 4){
-        this.tileCountdown = this.veryHardCountdown;
-      }
-      this.levelIndicator.changeLevel(this.level);
+    this.levelCtd -= 1;
+    if(this.levelCtd <= 0 && this.level < 4){
+      this.levelCtd = 3;
+      this.level += 1;
     }
+    if(this.level == 1){
+      this.tileCountdown = this.easyCountdown;
+    }else if(this.level == 2){
+      this.tileCountdown = this.mediumCountdown;
+    }else if(this.level == 3){
+      this.tileCountdown = this.hardCountdown;
+    }else if(this.level == 4){
+      this.tileCountdown = this.veryHardCountdown;
+    }
+    this.levelIndicator.changeLevel(this.level);
     
   }
 
