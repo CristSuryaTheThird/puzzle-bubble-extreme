@@ -21,6 +21,8 @@ export default class GameScene extends Phaser.Scene {
   //#region audio
   private sfxBubble:Phaser.Sound.BaseSound;
   private sfxBubbleConfig;
+  private bgm:Phaser.Sound.BaseSound;;
+  private bgmConfig;
   //#endregion
 
   //#region input
@@ -111,7 +113,9 @@ export default class GameScene extends Phaser.Scene {
       [[1, 0], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1]], 
       [[1, 0], [1, 1], [0, 1], [-1, 0], [0, -1], [1, -1]]
      ];  
+     
     //#endregion
+    this.sound.removeAll();
   }
 
   create(): void 
@@ -127,6 +131,17 @@ export default class GameScene extends Phaser.Scene {
         loop: false,
         delay: 0,
       }
+      this.bgm = this.sound.add('bgm');
+      this.bgmConfig = {
+        mute: false,
+        volume: 0.5,
+        rate: 1,
+        detune: 0,
+        seek: 0,
+        loop: true,
+        delay: 0,
+      }
+      this.bgm.play(this.bgmConfig)
       var r1 = this.add.rectangle(this.width/2, this.height*0.0375, this.width, this.height*0.075, 0x6666ff);
       var r2 = this.add.rectangle(this.width/2, this.height*0.875,this.width,this.height*0.25,0x7d7b7a );
       var r3 = this.add.rectangle(this.width/2, this.height*0.71,this.width,this.height*0.0075,0xff0000 ).setAlpha(0.3);
@@ -186,7 +201,7 @@ export default class GameScene extends Phaser.Scene {
         if(!this.gameOver){
           if(!this.bubbleDelay && this.aimMode){
             this.bubbleDelay = true;
-            this.physics.velocityFromRotation(this.pointerAngle , 2200, this.bubble.body.velocity);
+            this.physics.velocityFromRotation(this.pointerAngle , 2800, this.bubble.body.velocity);
           }
           this.aimMode = false;
         }    
@@ -246,6 +261,9 @@ export default class GameScene extends Phaser.Scene {
   private endGame(){
     if(!this.gameOverTriggered){
       // this.overlay.setAlpha(0.6)
+      this.bgm.destroy();
+
+  
       this.gameOverTriggered = true;
       this.scene.launch('GameOverScene',{score:this.score, level:this.level});
       let panel = this.scene.get('GameOverScene');
@@ -518,6 +536,7 @@ export default class GameScene extends Phaser.Scene {
     let coord:{tilex:number,tiley:number} = this.getBubbleCoordinate(tilePos.x,tilePos.y);
     const rowNum = tilePos.y;
     const currMaxRow = this.bubbleStacks.length - 1;
+
     let bubTile = {
       xCoord:coord.tilex,
       yCoord:coord.tiley,

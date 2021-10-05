@@ -12,6 +12,7 @@ export default class PreloadScene extends Phaser.Scene {
     this.load.spritesheet('bubble','bubbleSprite.png',{frameWidth:512,frameHeight:512});
     this.load.image('arrow','arrowUp.png');
     this.load.audio('sfx', 'pop-2.mp3');
+    this.load.audio('bgm', 'GameBGM.mp3');
     this.load.image('button','gameOver/buttonLong_brown.png');
     this.load.image('buttonPressed','gameOver/buttonLong_brown_pressed.png');
     this.load.image('panel','gameOver/panel_brown.png')
