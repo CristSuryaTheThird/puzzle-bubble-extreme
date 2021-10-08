@@ -15,8 +15,10 @@ import { ConstructorDeclaration } from "typescript";
 
 export default class GameScene extends Phaser.Scene {
   private ctd = 0;
+  private spacebar:Phaser.Input.Keyboard.Key;
   //#region GameOver
   private gameOver:boolean;
+  private gameOverCheck:boolean;
   private gameOverTriggered:boolean;
   //#endregion
 
@@ -58,7 +60,6 @@ export default class GameScene extends Phaser.Scene {
 
   //#region Aiming
   private aimMode:boolean = false;
-  private bubbleDelay:boolean = false;
   private boolOnCollision: boolean = false;
   //#endregion
 
@@ -66,6 +67,8 @@ export default class GameScene extends Phaser.Scene {
 
 
   //#region number and array
+  private bubbleDelay:boolean = false;
+  private popDelay:boolean = false;
   private bubbleSpawnY:number;
   private width:number = 0;
   private height:number = 0;
@@ -96,12 +99,14 @@ export default class GameScene extends Phaser.Scene {
     this.width = this.scale.width;  
     this.height = this.scale.height;
     this.gameOver = false;
+    this.gameOverCheck = false;
     this.gameOverTriggered = false;
     this.inverted = false;
     this.bubbleStacks = []
     this.tempBubbleStacks = []
     this.boolOnCollision = false;
     this.bubbleDelay = false;
+    this.popDelay = false;
     //#region level progresion variable
     this.level = 1;
     this.levelCtd = 3;
@@ -122,7 +127,7 @@ export default class GameScene extends Phaser.Scene {
   create(): void 
   {
       let myCoord:{tilex:number,tiley:number} = this.getBubbleCoordinate(0,9);
-      // this.spacebar = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+      this.spacebar = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
       this.sfxBubble = this.sound.add('sfx');
       this.sfxBubbleConfig = {
         mute: false,
@@ -192,7 +197,7 @@ export default class GameScene extends Phaser.Scene {
      
       this.input.on('pointerdown',(pointer:Phaser.Input.Pointer)=>{
         if(!this.gameOver){
-          if(pointer.y >=this.height*0.775){
+          if(pointer.y >= this.bubbleSpawnY + this.height*0.033){
          
             if(!this.bubbleDelay){
               this.aimMode = true;
@@ -204,7 +209,6 @@ export default class GameScene extends Phaser.Scene {
         }
       });
      
-      
       this.input.on('pointerup',()=>{
         if(!this.gameOver){
           if(!this.bubbleDelay && this.aimMode){
@@ -219,7 +223,7 @@ export default class GameScene extends Phaser.Scene {
     
       this.input.on('pointermove',(pointer:Phaser.Input.Pointer)=>{
         if(!this.bubbleDelay && this.aimMode){
-          if(pointer.y >= this.height*0.775){
+          if(pointer.y >= this.bubbleSpawnY + this.height*0.033){
            this.adjustAimAngle(pointer);
             
           }else{
@@ -231,8 +235,8 @@ export default class GameScene extends Phaser.Scene {
       //#endregion
     
       this.physics.add.overlap(this.gameOverColider,this.bubbleGroup,()=>{
-        this.gameOver = true;
-        this.scene.pause();
+        this.gameOverCheck = true;
+        
       },undefined,this)
       this.physics.add.overlap(this.bubble,this.bubbleGroup,this.bubleOverlapHandler,undefined,this)
       this.arrow = new Arrow(this, this.bubble.x, this.bubble.y);
@@ -241,8 +245,12 @@ export default class GameScene extends Phaser.Scene {
   
   update(): void 
   { 
+    // this.debugMode()
+
     if(!this.gameOver){
-      
+      if(this.gameOverCheck === true && this.bubbleDelay === false){
+        this.gameOver = true;
+      }
       if(!this.bubbleDelay && this.aimMode){
         this.arrow.visible = true;
       }else{
@@ -263,6 +271,11 @@ export default class GameScene extends Phaser.Scene {
     
   }
 
+  private debugMode(){
+    if(Phaser.Input.Keyboard.JustDown(this.spacebar)){
+      this.progressLevel();
+    }
+  }
   //#region game over
   private endGame(){
     if(!this.gameOverTriggered){
@@ -471,7 +484,7 @@ export default class GameScene extends Phaser.Scene {
 
   //#region Snap Bubble, adjust array, and adjust coordinate
   private bubleOverlapHandler(b:Phaser.GameObjects.GameObject, g:Phaser.GameObjects.GameObject):void{
-    if(this.boolOnCollision === false){
+    if(this.boolOnCollision === false && this.bubbleDelay === true && this.popDelay === false){
       const bubble = b as Bubble;
       const group = g as Bubble
       this.boolOnCollision = true;
@@ -512,8 +525,7 @@ export default class GameScene extends Phaser.Scene {
       this.nextBubble.changeColor(this.nextColor);
       this.switchButton.changeColor(this.nextColor);
       this.physics.add.overlap(this.gameOverColider,this.bubbleGroup,()=>{
-        this.gameOver = true;
-        this.scene.pause();
+        this.gameOverCheck = true;
       },undefined,this)
       this.physics.add.overlap(this.bubble,this.bubbleGroup,this.bubleOverlapHandler,undefined,this)
   
@@ -623,7 +635,7 @@ export default class GameScene extends Phaser.Scene {
     let xval:number = 0;
     let yval:number = 0;
     let centerx: number = bubble.x;
-    let centery: number = bubble.y + (this.height*0.025);
+    let centery: number = bubble.y + (this.height*0.033);
     yval = Math.floor(centery/tileheight);
     let xoffset = 0;
     if(yval % 2){
@@ -665,6 +677,8 @@ export default class GameScene extends Phaser.Scene {
     if(xval < 0){
       xval = 0;
     }
+
+    let test = Math.floor((centery-(this.height*0.081))/tileheight)
     return {x:xval ,y:yval-2}
   }
   //#endregion
@@ -674,17 +688,16 @@ export default class GameScene extends Phaser.Scene {
     let cluster = [];
     cluster = this.findcluster(tilex,tiley,true,true,false);
     if(cluster.length >= 3){
+      this.popDelay = true;
       for(let idx = 0; idx< cluster.length; idx++){
         this.bubbleGroup.children.each(c => {
           const child = c as Phaser.Physics.Arcade.Sprite;
           if(child.x === cluster[idx].xCoord && child.y === cluster[idx].yCoord){
             this.bubbleStacks[cluster[idx].yPos][cluster[idx].xPos] = undefined;
-            
             this.tweens.add({
               targets: child,
-              completeDelay:(idx*50)+1,
+              completeDelay:(idx*50),
               onComplete:()=>{
-                if(!this.gameOver){
                   let popSound = this.sound.add('sfx');
                   popSound.play(this.sfxBubbleConfig);
                   child.anims.play('pop');
@@ -692,12 +705,14 @@ export default class GameScene extends Phaser.Scene {
                   if(idx === cluster.length - 1){
                     this.floatHandler();
                   }
-                }
-                
                 child.on('animationcomplete',()=>{
                   child.destroy();
                   if(idx === cluster.length-1){
+                    if(this.gameOverCheck){
+                      this.gameOverCheck = false;
+                    }
                     this.progressLevel();
+                    this.popDelay  = false;
                     this.bubbleDelay = false;
                   }
                 })
@@ -707,8 +722,14 @@ export default class GameScene extends Phaser.Scene {
         }) 
       }
     }else{
-      this.bubbleDelay = false;
-      this.progressLevel();
+     
+      if(this.gameOverCheck){
+        this.gameOver = true;
+      }else{
+        this.progressLevel();
+        this.bubbleDelay = false;
+      }
+      
     }
   }
     private floatHandler(){
