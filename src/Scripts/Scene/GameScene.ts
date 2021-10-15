@@ -35,6 +35,7 @@ export default class GameScene extends Phaser.Scene {
   private switchButton:SwitchButton;
   private bgmButton:BgmButton;
   private bubbleGroup:Bubbles;
+  private bubbleGroupGeom:Bubbles;
   private bubble:Bubble;
   private nextBubble:Bubble;
   private nextBubbleBorder: NextBubbleBorder;
@@ -70,6 +71,10 @@ export default class GameScene extends Phaser.Scene {
   private bubbleDelay:boolean = false;
   private popDelay:boolean = false;
   private bubbleSpawnY:number;
+  private bubbleRad:number;
+  private bubbleOffset:number;
+  private bubbleGeomRad:number;
+  private bubbleGeomOffset:number
   private width:number = 0;
   private height:number = 0;
   private level:number;
@@ -87,7 +92,6 @@ export default class GameScene extends Phaser.Scene {
   private tempBubbleStacks = []
   private neighbouroffsets = [];  
 
-
   //#endregion
   
   constructor() {
@@ -95,19 +99,15 @@ export default class GameScene extends Phaser.Scene {
   }
 
   init(): void {
+    this.resetVar();
     this.score = 0;
     this.width = this.scale.width;  
     this.height = this.scale.height;
-    this.gameOver = false;
-    this.gameOverCheck = false;
-    this.gameOverTriggered = false;
-    this.inverted = false;
-    this.bubbleStacks = []
-    this.tempBubbleStacks = []
-    this.boolOnCollision = false;
-    this.bubbleDelay = false;
-    this.popDelay = false;
     //#region level progresion variable
+    this.bubbleRad = 165;
+    this.bubbleOffset = 94;
+    this.bubbleGeomRad = 190;
+    this.bubbleGeomOffset = 72;
     this.level = 1;
     this.levelCtd = 3;
     this.easyCountdown = 10;
@@ -158,12 +158,13 @@ export default class GameScene extends Phaser.Scene {
       this.gameOverColider = new GameOverColider(this,this.width/2,myCoord.tiley,this.width,this.height*0.0075)
       this.ceilingColider = new CeilingCollider(this,this.width/2,this.height*0.0375,this.width,this.height*0.075);
       
-      this.bubble = new Bubble(this,this.width/2,this.bubbleSpawnY, Phaser.Math.Between(0,6),this.width);
+      this.bubble = new Bubble(this,this.width/2,this.bubbleSpawnY, Phaser.Math.Between(0,6),this.width,this.bubbleRad, true,this.bubbleOffset);
       this.bubbleGroup = new Bubbles(this.physics.world, this);
+      this.bubbleGroupGeom = new Bubbles(this.physics.world,this);
 
       this.nextColor = Phaser.Math.Between(0,6);
       this.nextBubbleBorder = new NextBubbleBorder(this,this.width*0.89,myCoord.tiley + (this.height*0.125));
-      this.nextBubble = new Bubble(this,this.width*0.89,myCoord.tiley + (this.height*0.125), this.nextColor,this.width);
+      this.nextBubble = new Bubble(this,this.width*0.89,myCoord.tiley + (this.height*0.125), this.nextColor,this.width,this.bubbleRad, true,this.bubbleOffset);
       
       this.fpsText = new FpsText(this.height,this);
       this.scoreText = new ScoreText(this.width*0.021,this.height*0.021,this);
@@ -222,6 +223,7 @@ export default class GameScene extends Phaser.Scene {
       
     
       this.input.on('pointermove',(pointer:Phaser.Input.Pointer)=>{
+       
         if(!this.bubbleDelay && this.aimMode){
           if(pointer.y >= this.bubbleSpawnY + this.height*0.033){
            this.adjustAimAngle(pointer);
@@ -276,6 +278,30 @@ export default class GameScene extends Phaser.Scene {
       this.progressLevel();
     }
   }
+
+  private resetVar(){
+    this.gameOver = false;
+    this.gameOverCheck = false;
+    this.gameOverTriggered = false;
+    this.inverted = false;
+    this.boolOnCollision = false;
+    this.bubbleDelay = false;
+    this.popDelay = false;
+    this.bubbleStacks = []
+    this.tempBubbleStacks = []
+    
+    for(let i = 0; i<10;i++){
+      let tempArr = []
+      let col = this.getColNum(i);
+     
+      for(let j = 0; j<col; j++){
+        tempArr.push(undefined);
+      }
+      this.bubbleStacks.push(tempArr)
+    
+    }
+  }
+
   //#region game over
   private endGame(){
     if(!this.gameOverTriggered){
@@ -330,7 +356,7 @@ export default class GameScene extends Phaser.Scene {
     
     do{ 
       objExist = false;
-      this.bubbleGroup.children.each(c =>{
+      this.bubbleGroupGeom.children.each(c =>{
         const child = c as Phaser.Physics.Arcade.Sprite;
         if(!objExist){
           objExist = child.body.hitTest(linePoints[idx].x,linePoints[idx].y);
@@ -384,7 +410,7 @@ export default class GameScene extends Phaser.Scene {
     
     do{ 
       objExist = false;
-      this.bubbleGroup.children.each(c =>{
+      this.bubbleGroupGeom.children.each(c =>{
         const child = c as Phaser.Physics.Arcade.Sprite;
         if(!objExist){
           objExist = child.body.hitTest(linePoints[idx].x,linePoints[idx].y);
@@ -464,8 +490,19 @@ export default class GameScene extends Phaser.Scene {
       x = this.getColNum(row);
       for(let column = 0; column < x; ++column){
         let coord:{tilex:number,tiley:number} = this.getBubbleCoordinate(column,row);
-        this.bubbleGroup.add(new Bubble(this,coord.tilex,coord.tiley,this.bubbleColorCode[row][column],this.width))
-        tempArr.push({
+        this.bubbleGroup.add(new Bubble(this,coord.tilex,coord.tiley,this.bubbleColorCode[row][column],this.width, this.bubbleRad, true, this.bubbleOffset).setData({xPos:column,yPos:row}))
+        this.bubbleGroupGeom.add(new Bubble(this,coord.tilex,coord.tiley,this.bubbleColorCode[row][column],this.width, this.bubbleGeomRad, false, this.bubbleGeomOffset))
+        
+        // tempArr.push({
+        //   xCoord:coord.tilex,
+        //   yCoord:coord.tiley,
+        //   xPos: column,
+        //   yPos: row,
+        //   code:this.bubbleColorCode[row][column],
+        //   processed: false,
+        //   odd: odd
+        // })
+        this.bubbleStacks[row][column] = {
           xCoord:coord.tilex,
           yCoord:coord.tiley,
           xPos: column,
@@ -473,12 +510,14 @@ export default class GameScene extends Phaser.Scene {
           code:this.bubbleColorCode[row][column],
           processed: false,
           odd: odd
-        })
+        }
       
       }
+      
   
-        this.bubbleStacks.push(tempArr);
+        // this.bubbleStacks.push(tempArr);
     }
+    // console.log(this.bubbleStacks);
   }
   //#endregion
 
@@ -513,14 +552,23 @@ export default class GameScene extends Phaser.Scene {
       tilePos = this.adjustBubbleCoordinate(bubTile);
       coord = this.getBubbleCoordinate(tilePos.x,tilePos.y);
     }
-    this.adjustBubbleArray(tilePos);
+    // this.adjustBubbleArray(tilePos);
+    this.bubbleStacks[tilePos.y][tilePos.x] = {
+      xCoord:coord.tilex,
+      yCoord:coord.tiley,
+      xPos:tilePos.x,
+      yPos:tilePos.y,
+      code:this.tempBubble.getData('code'),
+      processed:false
+    }
 
-    this.bubbleGroup.add(new Bubble(this,coord.tilex,coord.tiley,this.tempBubble.getData('code'),this.width));
+    this.bubbleGroup.add(new Bubble(this,coord.tilex,coord.tiley,this.tempBubble.getData('code'),this.width, this.bubbleRad,true, this.bubbleOffset).setData({xPos:tilePos.x,yPos:tilePos.y}));
+    this.bubbleGroupGeom.add(new Bubble(this,coord.tilex,coord.tiley,this.tempBubble.getData('code'),this.width, this.bubbleGeomRad,false,this.bubbleGeomOffset));
     this.bubble.destroy(true);
   
     if(!this.gameOver){
       this.popHandler(tilePos.x, tilePos.y)
-      this.bubble = new Bubble(this,this.width/2,this.bubbleSpawnY, this.nextColor,this.width);
+      this.bubble = new Bubble(this,this.width/2,this.bubbleSpawnY, this.nextColor,this.width, 187, true, 82);
       this.nextColor = Phaser.Math.Between(0,6);
       this.nextBubble.changeColor(this.nextColor);
       this.switchButton.changeColor(this.nextColor);
@@ -534,77 +582,45 @@ export default class GameScene extends Phaser.Scene {
   }
 
   private adjustBubbleCoordinate(bubTile):{x:number, y:number}{
+    if(Math.abs(this.tempBubbleHit.getData('yPos') - bubTile.yPos)>=2){
+      if(this.tempBubbleHit.y > bubTile.yCoord){
+        bubTile.yPos += 1;
+      }else{
+        bubTile.yPos -= 1;
+      }
+      console.log("wadidaw");
+    }
     let bubNeighbor = this.getNeighbor(bubTile);
     let trueNeighbor:boolean = false;
+    
     for(let i = 0; i< bubNeighbor.length; i++){
       if(bubNeighbor[i].xCoord === this.tempBubbleHit.x && bubNeighbor[i].yCoord === this.tempBubbleHit.y){
         trueNeighbor = true;
         break;
       }
     }
+   
     if(!trueNeighbor){
       console.log(bubTile);
+      
       if(this.tempBubbleHit.x > bubTile.xCoord){
-        if(this.bubbleStacks.length > bubTile.yPos){    
-          if(this.bubbleStacks[bubTile.yPos][bubTile.xPos + 1] === undefined){
+        if(bubTile.xPos+1 < this.bubbleStacks[bubTile.yPos].length){
+          if(this.bubbleStacks[bubTile.yPos][bubTile.xpos+1] === undefined){
             bubTile.xPos += 1;
           }
-        }else{
-          bubTile.xPos += 1;
         }
+        
       }else{
-        if(this.bubbleStacks.length > bubTile.yPos){
-          if(bubTile.xPos - 1 >= 0){
-            if(this.bubbleStacks[bubTile.yPos][bubTile.xPos - 1] === undefined){
-              bubTile.xPos -= 1;
-            }
-          }
-         
-        }else{
-          if(bubTile.xPos - 1 >= 0){
+        if(bubTile.xPos - 1 >= 0){
+          if(this.bubbleStacks[bubTile.yPos][bubTile.xpos-1] === undefined){
             bubTile.xPos -= 1;
           }
-        
+          
         }
       }
       console.log(bubTile);
     }
     return {x:bubTile.xPos,y:bubTile.yPos}
-  }
-
-  private adjustBubbleArray(tilePos){
-    const rowNum = tilePos.y;
-    const currMaxRow = this.bubbleStacks.length - 1;
-    let coord = this.getBubbleCoordinate(tilePos.x,tilePos.y);
-    let col:number = this.getColNum(rowNum);
-    if(rowNum > currMaxRow){
-      let tempArr = [];
-      for(let i = 0; i< col;i++){
-        if(i !== tilePos.x){
-          tempArr.push(undefined);
-        }else{
-          tempArr.push({
-            xCoord:coord.tilex,
-            yCoord:coord.tiley,
-            xPos:tilePos.x,
-            yPos:tilePos.y,
-            code:this.tempBubble.getData('code'),
-            processed:false
-          })
-        }
-      }
-      this.bubbleStacks.push(tempArr);
-     
-    }else{
-      this.bubbleStacks[tilePos.y][tilePos.x] = {
-        xCoord:coord.tilex,
-        yCoord:coord.tiley,
-        xPos:tilePos.x,
-        yPos:tilePos.y,
-        code:this.tempBubble.getData('code'),
-        processed:false
-      }
-    }
   }
 
   private getBubbleCoordinate(column, row):{tilex:number, tiley:number}{
@@ -631,11 +647,13 @@ export default class GameScene extends Phaser.Scene {
   private snapBubble(bubble:Bubble):{x:number, y:number}{
     const tilewidth = this.cameras.main.width/8;
     const tileheight = this.cameras.main.width/8-(this.width*0.014);
+
+    
     let odd = false;
     let xval:number = 0;
     let yval:number = 0;
     let centerx: number = bubble.x;
-    let centery: number = bubble.y + (this.height*0.033);
+    let centery: number = bubble.y - (this.height*0.081);
     yval = Math.floor(centery/tileheight);
     let xoffset = 0;
     if(yval % 2){
@@ -679,7 +697,7 @@ export default class GameScene extends Phaser.Scene {
     }
 
     let test = Math.floor((centery-(this.height*0.081))/tileheight)
-    return {x:xval ,y:yval-2}
+    return {x:xval ,y:yval}
   }
   //#endregion
 
@@ -688,8 +706,15 @@ export default class GameScene extends Phaser.Scene {
     let cluster = [];
     cluster = this.findcluster(tilex,tiley,true,true,false);
     if(cluster.length >= 3){
+      
       this.popDelay = true;
       for(let idx = 0; idx< cluster.length; idx++){
+        this.bubbleGroupGeom.children.each(c=>{
+          const child = c as Phaser.Physics.Arcade.Sprite;
+          if(child.x === cluster[idx].xCoord && child.y === cluster[idx].yCoord){
+            child.destroy();
+          }
+        })
         this.bubbleGroup.children.each(c => {
           const child = c as Phaser.Physics.Arcade.Sprite;
           if(child.x === cluster[idx].xCoord && child.y === cluster[idx].yCoord){
@@ -737,6 +762,12 @@ export default class GameScene extends Phaser.Scene {
     if(floatingCluster.length > 0){
       for(let fRow = 0; fRow< floatingCluster.length; fRow++){
         for(let fCol = 0; fCol<floatingCluster[fRow].length; fCol++){
+          this.bubbleGroupGeom.children.each(c=>{
+            const child = c as Phaser.Physics.Arcade.Sprite;
+            if(child.x === floatingCluster[fRow][fCol].xCoord && child.y === floatingCluster[fRow][fCol].yCoord){
+              child.destroy();
+            }
+          })
           this.bubbleGroup.children.each(c =>{
             const child = c as Phaser.Physics.Arcade.Sprite;
             if(child.x === floatingCluster[fRow][fCol].xCoord && child.y === floatingCluster[fRow][fCol].yCoord){
@@ -887,7 +918,7 @@ export default class GameScene extends Phaser.Scene {
     }
     //#region making temp bubblestack
     let tempColNum = this.getColNum(0);
-    let maxRowLength:number = 0;
+    let maxRowLength:number = this.bubbleStacks.length;
     this.tempBubbleStacks = [];
     let newColor = this.getNewColor(tempColNum);
     let tempArr = []
@@ -906,12 +937,6 @@ export default class GameScene extends Phaser.Scene {
     this.tempBubbleStacks.push(tempArr);
     //#endregion
     //#region moving bubble stack to temp bubblestack
-    
-    if(this.bubbleStacks.length >= 9){
-      maxRowLength = 9;
-    }else{
-      maxRowLength = this.bubbleStacks.length;
-    }
     
     for(let row = 0; row < maxRowLength; row++){  
       tempArr = []
@@ -943,11 +968,16 @@ export default class GameScene extends Phaser.Scene {
       const child = c as Phaser.Physics.Arcade.Sprite;
       child.destroy(); 
     })
+    this.bubbleGroupGeom.children.each(c =>{
+      const child = c as Phaser.Physics.Arcade.Sprite;
+      child.destroy(); 
+    })
     for(let row = 0; row < this.bubbleStacks.length;row++){
       let colnum = this.getColNum(row);
       for(let col = 0; col < colnum; col++){
         if(this.bubbleStacks[row][col] !== undefined){
-          this.bubbleGroup.add(new Bubble(this,this.bubbleStacks[row][col].xCoord,this.bubbleStacks[row][col].yCoord,this.bubbleStacks[row][col].code,this.width));
+          this.bubbleGroup.add(new Bubble(this,this.bubbleStacks[row][col].xCoord,this.bubbleStacks[row][col].yCoord,this.bubbleStacks[row][col].code,this.width, this.bubbleRad,true, this.bubbleOffset).setData({xPos:col,yPos:row}));
+          this.bubbleGroupGeom.add(new Bubble(this,this.bubbleStacks[row][col].xCoord,this.bubbleStacks[row][col].yCoord,this.bubbleStacks[row][col].code,this.width, this.bubbleGeomRad,false,this.bubbleGeomOffset));
         }
       }
     }
