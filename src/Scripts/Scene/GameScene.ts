@@ -568,7 +568,7 @@ export default class GameScene extends Phaser.Scene {
   
     if(!this.gameOver){
       this.popHandler(tilePos.x, tilePos.y)
-      this.bubble = new Bubble(this,this.width/2,this.bubbleSpawnY, this.nextColor,this.width, 187, true, 82);
+      this.bubble = new Bubble(this,this.width/2,this.bubbleSpawnY, this.nextColor,this.width, this.bubbleRad, true,this.bubbleOffset);
       this.nextColor = Phaser.Math.Between(0,6);
       this.nextBubble.changeColor(this.nextColor);
       this.switchButton.changeColor(this.nextColor);
